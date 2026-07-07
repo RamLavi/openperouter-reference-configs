@@ -1,0 +1,17 @@
+---
+apiVersion: openpe.openperouter.github.io/v1alpha1
+kind: Underlay
+metadata:
+  name: underlay
+spec:
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/worker: ''
+  asn: 64514
+  tunnelEndpoint:
+    cidrs:
+      - 100.65.0.0/24
+  neighbors:
+    - asn: 64512
+      address: 192.168.10.129
+  nics: [ "ens4mvln" ]
