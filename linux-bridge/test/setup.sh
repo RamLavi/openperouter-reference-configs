@@ -110,7 +110,7 @@ echo "INFO: Generate OpenPERouter Underlay manifest:"
     CLUSTER_ASN=$CLUSTER_NET_ASN \
     NEI_ASN=$EXT_NET_ASN \
     NEI_IP=$EXT_FRR_IP \
-    NICS="\"${NET1_NODE_NIC}\""
+    NICS="\"${NET1_MVLAN}\""
   echo "\
     CLUSTER_ASN=$CLUSTER_ASN
     NEI_ASN=$NEI_ASN
@@ -119,15 +119,46 @@ echo "INFO: Generate OpenPERouter Underlay manifest:"
   envsubst <<< $(cat $UNDERLAY_TEMPLATE) > $UNDERLAY_MANIFEST
 )
 
+declare -A node_ips
+node_ips[$NODE0]=$NET1_MVLN_NODE0_IP
+node_ips[$NODE1]=$NET1_MVLN_NODE1_IP
+for node in "${!node_ips[@]}"; do
+  ip="${node_ips[$node]}"
+  echo "INFO: Create macvlan on node [$node] [$NET1_MVLAN] [$ip]:"
+  oc -n $NAMESPACE debug node/$node  -q --image=nicolaka/netshoot -- bash -x -c "\
+    hostname
+    nsenter -a -t 1 ip netns exec perouter ip -br a show $NET1_MVLAN && exit 0
+    ip link add link $NET1_NODE_NIC name $NET1_MVLAN type macvlan mode bridge
+    ip -br a show $NET1_MVLAN
+  "
+done
+
 echo "INFO: Create NNCP for creating VNI linux-bridge"
-oc apply -f $NNCP_VNI_BR_TEMPLATE
+oc apply -f $NNCP_VNI_BR_MANIFEST
 echo "INFO: Create underlay"
 oc -n $NAMESPACE apply -f $UNDERLAY_MANIFEST
+
+echo "INFO: Waiting for underlay settings converge.."
+sleep 25
+
+echo "INFO: Set static IP addresses for macvlan device after it was moved to per router netns.."
+declare -A node_ips
+node_ips[$NODE0]=$NET1_MVLN_NODE0_IP
+node_ips[$NODE1]=$NET1_MVLN_NODE1_IP
+for node in "${!node_ips[@]}"; do
+  ip="${node_ips[$node]}"
+  echo "INFO: Create macvlan on node [$node] [$NET1_MVLAN] [$ip]:"
+  oc -n $NAMESPACE debug node/$node  -q --image=nicolaka/netshoot -- bash -x -c "\
+    hostname
+    nsenter -a -t 1 ip netns exec perouter ip -br a show $NET1_MVLAN | grep $ip && exit 0
+    nsenter -a -t 1 ip netns exec perouter ip addr add $ip/$NET1_PREFIX broadcast $NET1_BRD dev $NET1_MVLAN
+    nsenter -a -t 1 ip netns exec perouter ip link set dev $NET1_MVLAN up
+    nsenter -a -t 1 ip netns exec perouter ip -br a show $NET1_MVLAN
+  "
+done
+
 echo "INFO: Create VNIs"
 oc -n $NAMESPACE apply -f $VNIS_MANIFEST
-
-echo "INFO: Waiting for VNI linux-bridge NNCP"
-oc wait nncp $VNI_BR_NNCP_NAME --for condition=Available --timeout 5m
 
 # TODO: uncomment once fix for status showing UNKNOWN bug is consumed
 # oc -n $NAMESPACE wait routernodeconfigurationstatus/$NODE0 --for condition=Ready --timeout 5m

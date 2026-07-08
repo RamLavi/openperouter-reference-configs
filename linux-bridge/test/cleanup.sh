@@ -26,20 +26,17 @@ while oc get ns $TEST_NS &> /dev/null; do
   sleep 3
 done
 
-# TODO: rm this workaround for NIC wont return to root netns bug
-for n in ${NODE_VMS[@]}; do
-    kcli ssh -i /root/.ssh/kcli $n -- bash -x <<< '\
-for nic in ens4 ens5; do \
-ip link show $nic && continue; \
-sudo ip netns exec perouter ip link set $nic down; \
-sudo ip netns exec perouter ip link set $nic netns 1; \
-sudo ip link set $nic up; \
-ip addr show $nic; \
-done \
-'
+echo "INFO: cleanup underlay macvlan devices"
+declare -A node_ips
+node_ips[$NODE0]=$NET1_MVLN_NODE0_IP
+node_ips[$NODE1]=$NET1_MVLN_NODE1_IP
+for node in "${!node_ips[@]}"; do
+  ip="${node_ips[$node]}"
+  oc -n $NAMESPACE debug node/$node  -q --image=nicolaka/netshoot -- bash -x -c "\
+    hostname
+    ip link del $NET1_MVLAN ||:
+    ip link show $NET1_MVLAN ||:
+    nsenter -a -t 1 ip netns exec perouter ip link del $NET1_MVLAN ||:
+    nsenter -a -t 1 ip netns exec perouter ip link show $NET1_MVLAN ||:
+  "
 done
-
-echo "INFO: cleanup vni br nncp"
-oc patch nncp $VNI_BR_NNCP_NAME --type=json -p '[{"op":"replace","path":"/spec/desiredState/interfaces/0/state","value":"absent"}]'
-oc wait nncp $VNI_BR_NNCP_NAME --for condition=Available --timeout 5m
-oc delete nncp $VNI_BR_NNCP_NAME
