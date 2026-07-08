@@ -65,8 +65,11 @@ EXT_FRR_IMG="frr-router"
 FRR_CONFIG="${DIR}/external-router/frrconfigs"
 
 # external router network interface names
-EXT_FRR_NET1_NIC="eth0" # underlay
-EXT_FRR_EXT_NET_NIC="eth1" # external client network
+# NOTE: these are no longer used for NIC-to-VRF assignment or IP extraction.
+# setup.sh now discovers actual NIC names dynamically because podman
+# multi-network NIC ordering is non-deterministic.
+EXT_FRR_NET1_NIC="eth0" # underlay (may vary)
+EXT_FRR_EXT_NET_NIC="eth1" # external client network (may vary)
 
 # templates and manifests paths
 TMPL_DIR="${DIR}/templates"
@@ -76,6 +79,8 @@ FRR_CONF="${FRR_CONFIG}/frr.conf"
 
 NNCP_TEMPLATE="${TMPL_DIR}/create-linux-bridge-nncp.yaml"
 NNCP_MANIFEST="${DIR}/00-create-linux-bridge-nncp.yaml"
+
+MVLN_NNCP_TEMPLATE="${TMPL_DIR}/create-macvlan-underlay.yaml"
 
 UNDERLAY_TEMPLATE="${TMPL_DIR}/openperouter-underlay.yaml"
 UNDERLAY_MANIFEST="${DIR}/01-openperouter-underlay.yaml"

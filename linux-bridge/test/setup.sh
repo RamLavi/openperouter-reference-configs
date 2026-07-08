@@ -68,6 +68,8 @@ echo "INFO: Generate external-router frr.conf:"
 )
 
 echo "INFO: Run external router [$EXT_FRR_NAME]"
+# network-setup.sh (entrypoint) auto-detects which NIC is underlay vs external
+# by matching subnet, so podman multi-network NIC ordering does not matter.
 podman run --name $EXT_FRR_NAME \
   --rm -d --privileged --ulimit core=-1 \
   --volume $FRR_CONFIG:/etc/frr \
@@ -89,7 +91,7 @@ node_ips[$NODE0]=$NET1_MVLN_NODE0_IP
 node_ips[$NODE1]=$NET1_MVLN_NODE1_IP
 nncp_dir="$SCRIPT_PATH/_nncps"
 nncps=()
-mkdir -p nnpc
+mkdir -p $nncp_dir
 for node in "${!node_ips[@]}"; do
   ip="${node_ips[$node]}"
   echo "INFO: Gen NNCP for creating macvlan:"
@@ -107,7 +109,7 @@ for node in "${!node_ips[@]}"; do
       NIC=$NIC
       NODE=$node
       IP=$IP"
-    envsubst <<< $(cat $MVLN_NNCP) > "${nncp_dir}/mvln-nncp-${node}.yaml"
+    envsubst <<< $(cat $MVLN_NNCP_TEMPLATE) > "${nncp_dir}/mvln-nncp-${node}.yaml"
   )
   nncps+=($nncp_meta_name)
 done
@@ -129,11 +131,16 @@ echo "INFO: Gen VNI manifest:"
   envsubst <<< $(cat $VNIS_TEMPLATE) > $VNIS_MANIFEST
 )
 
-# underlay manifest generation require the external router IP.
-if $(podman ps $EXT_FRR_NAME 2>&1 | grep -q Up); then
-  echo "FATAL: cannot generate underlay manifest, external router is not running" && exist 1
+# underlay manifest generation requires the external router IP.
+if ! podman ps --format '{{.Names}}' | grep -q "^${EXT_FRR_NAME}$"; then
+  echo "FATAL: cannot generate underlay manifest, external router is not running" && exit 1
 fi
-EXT_FRR_IP=$(podman exec $EXT_FRR_NAME ip -4 -o addr show dev $EXT_FRR_NET1_NIC scope global | awk '{print $4}' | cut -d/ -f1)
+# Discover the underlay NIC inside the container by matching the underlay subnet,
+# then extract its IP. This is robust regardless of podman NIC ordering.
+EXT_FRR_UNDERLAY_NIC=$(podman exec $EXT_FRR_NAME sh -c \
+  "ip -4 -o addr | grep '192\.168\.10\.' | awk '{print \$2}'" | head -1)
+EXT_FRR_IP=$(podman exec $EXT_FRR_NAME ip -4 -o addr show dev $EXT_FRR_UNDERLAY_NIC scope global | awk '{print $4}' | cut -d/ -f1)
+echo "INFO: External router underlay NIC=$EXT_FRR_UNDERLAY_NIC, IP=$EXT_FRR_IP"
 echo "INFO: Generate underlay manifest:"
 (
   export \
@@ -150,8 +157,8 @@ echo "INFO: Generate underlay manifest:"
 )
 
 oc apply -f $nncp_dir
-for nncp in ${nnps[@]}; do
-  echp "INFO: Wating for macvlan NNCP [$nncp]"
+for nncp in ${nncps[@]}; do
+  echo "INFO: Waiting for macvlan NNCP [$nncp]"
   oc wait nncp/$nncp --for condition=Available --timeout 5m
 done
 
