@@ -32,11 +32,37 @@ echo "INFO: Create test workloads"
 oc -n $TEST_NS apply -f ${DIR}/04-workloads.yaml
 
 echo "INFO: Waiting for VM readiness"
+# restart VMs to ensure NAD changes take effect
+if [[ $1 == "--restart-vms" ]]; then
+  virtctl -n $TEST_NS restart $VM1_NAME
+  virtctl -n $TEST_NS restart $VM2_NAME
+fi
+echo "INFO: Waiting for VM readiness"
+oc -n $TEST_NS wait vm/$VM1_NAME --for condition=Ready --timeout 10m
+oc -n $TEST_NS wait vm/$VM2_NAME --for condition=Ready --timeout 10m
+echo "INFO: Waiting for guest readiness"
 oc -n $TEST_NS wait vmi/$VM1_NAME --for condition=AgentConnected --timeout 10m
 oc -n $TEST_NS wait vmi/$VM2_NAME --for condition=AgentConnected --timeout 10m
 
 # its safe to expect for single IP address because VM is connected to single network
 VM1_IP=$(oc -n $TEST_NS get vmi $VM1_NAME -o jsonpath='{.status.interfaces[*].ipAddress}')
+VM2_IP=$(oc -n $TEST_NS get vmi $VM2_NAME -o jsonpath='{.status.interfaces[*].ipAddress}')
 
+echo "Test: VM to VM connectivity"
+virtctl -n $TEST_NS ssh root@vm/$VM1_NAME --identity-file=$VMS_KEY ping -c 3 -W 2 $VM2_IP ||
+  (echo "FAIL: no connectivity from [$VM1_NAME] to [$VM2_NAME][$VM2_IP]")
+virtctl -n $TEST_NS ssh root@vm/$VM2_NAME --identity-file=$VMS_KEY ping -c 3 -W 2 $VM1_IP ||
+  (echo "FAIL: no connectivity from [$VM2_NAME] to [$VM1_NAME][$VM2_IP]")
+
+echo "Test: connectivity from VMs to external-client"
+EXT_CLIENT_IP=$(podman inspect -f '{{(index .NetworkSettings.Networks "'"$EXT_NET_CRI_NET_NAME"'").IPAddress}}' $EXT_APP_NAME)
+virtctl -n $TEST_NS ssh root@vm/$VM1_NAME --identity-file=$VMS_KEY ping -c 3 -W 2 $EXT_CLIENT_IP ||
+  (echo "FAIL: no connectivity from [$VM1_NAME] to [external-container][$EXT_CLIENT_IP]")
+virtctl -n $TEST_NS ssh root@vm/$VM2_NAME --identity-file=$VMS_KEY ping -c 3 -W 2 $EXT_CLIENT_IP ||
+  (echo "FAIL: no connectivity from [$VM2_NAME] to [external-container][$EXT_CLIENT_IP]")
+
+echo "Test: connectivity from  external-client to VMs"
 podman exec $EXT_APP_NAME ping -c 3 -W 2 $VM1_IP ||
-  (echo "FAIL: no connectivity from [external client] to VM [$VM1_NAME]")
+  (echo "FAIL: no connectivity from [external-client] to [$VM1_NAME][$VM1_IP]")
+podman exec $EXT_APP_NAME ping -c 3 -W 2 $VM2_IP ||
+  (echo "FAIL: no connectivity from [external-client] to [$VM2_NAME][$VM2_IP]")
