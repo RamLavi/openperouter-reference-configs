@@ -83,6 +83,35 @@ echo "INFO: Generate NNCP for creating linux-bridge"
   envsubst <<< $(cat $NNCP_TEMPLATE) > $NNCP_MANIFEST
 )
 
+# gen nncp for creating macvlan for the underlay nic (net1)
+declare node_ips -A
+node_ips[$NODE0]=$NET1_MVLN_NODE0_IP
+node_ips[$NODE1]=$NET1_MVLN_NODE1_IP
+nncp_dir="$SCRIPT_PATH/_nncps"
+nncps=()
+mkdir -p nnpc
+for node in "${!node_ips[@]}"; do
+  ip="${node_ips[$node]}"
+  echo "INFO: Gen NNCP for creating macvlan:"
+  nncp_meta_name="macvlan-${NET1_NODE_NIC}-${node}"
+  (
+    export \
+      META_NAME=$nncp_meta_name \
+      IFACE_NAME=$NET1_MVLAN \
+      NIC=$NET1_NODE_NIC \
+      NODE=$node \
+      IP=$ip
+    echo "\
+      META_NAME=$META_NAME
+      IFACE_NAME=$IFACE_NAME
+      NIC=$NIC
+      NODE=$node
+      IP=$IP"
+    envsubst <<< $(cat $MVLN_NNCP) > "${nncp_dir}/mvln-nncp-${node}.yaml"
+  )
+  nncps+=($nncp_meta_name)
+done
+
 echo "INFO: Gen VNI manifest:"
 (
   export \
@@ -111,7 +140,7 @@ echo "INFO: Generate underlay manifest:"
     CLUSTER_ASN=$CLUSTER_NET_ASN \
     NEI_ASN=$EXT_NET_ASN \
     NEI_IP=$EXT_FRR_IP \
-    NICS="\"${NET1_NODE_NIC}\""
+    NICS="\"${NET1_MVLAN}\""
   echo "\
     CLUSTER_ASN=$CLUSTER_ASN
     NEI_ASN=$NEI_ASN
@@ -119,6 +148,12 @@ echo "INFO: Generate underlay manifest:"
     NICS=$NICS"
   envsubst <<< $(cat $UNDERLAY_TEMPLATE) > $UNDERLAY_MANIFEST
 )
+
+oc apply -f $nncp_dir
+for nncp in ${nnps[@]}; do
+  echp "INFO: Wating for macvlan NNCP [$nncp]"
+  oc wait nncp/$nncp --for condition=Available --timeout 5m
+done
 
 echo "INFO: Create NNCP for creating linux-bridge"
 oc apply -f $NNCP_MANIFEST

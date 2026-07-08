@@ -1,0 +1,24 @@
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: $META_NAME
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: $NODE
+  desiredState:
+    interfaces:
+    - name: $IFACE_NAME
+      type: mac-vlan
+      state: up
+      mac-vlan:
+        base-iface: $NIC
+        mode: bridge
+      ipv4:
+        enabled: true
+        address:
+          # The unique static IP for this specific node
+          - ip: $IP
+            prefix-length: 24
+        dhcp: false
+      ipv6:
+        enabled: false
