@@ -79,11 +79,23 @@ UNDERLAY_MANIFEST="${DIR}/01-openperouter-underlay.yaml"
 VNIS_TEMPLATE="${TMPL_DIR}/openperouter-vnis.yaml"
 VNIS_MANIFEST="${DIR}/02-openperouter-vnis.yaml"
 
+WORKLOADS_TEMPLATE="${TMPL_DIR}/workloads.yaml"
+WORKLOADS_MANIFEST="${DIR}/04-workloads.yaml"
+
 # openperouter system namespace
 NAMESPACE="openshift-openperouter"
 
 # tests namespace
 TEST_NS="test-evpn-linux-bridge"
+
+# VMs
+VM1_NAME="vm1"
+VM1_IP="192.170.0.3/24"
+VM2_NAME="vm2"
+VM2_IP="192.170.0.5/24"
+VMS_GW="192.170.1.1"
+VMS_PUBLIC_KEY="$(realpath ~/.ssh/kcli.pub)"
+VMS_KEY="$(realpath ~/.ssh/kcli)"
 
 # aggregated entities for teardown
 NODE_VMS=($NODE0_HOSTNAME $NODE1_HOSTNAME)

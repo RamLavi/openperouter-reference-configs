@@ -35,52 +35,52 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - evpn-workload
-            topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - evpn-workload
+              topologyKey: kubernetes.io/hostname
       architecture: amd64
       domain:
         devices:
           autoattachPodInterface: true
           disks:
-          - disk:
-              bus: virtio
-            name: cloudinitdisk
-          - bootOrder: 1
-            disk:
-              bus: virtio
-            name: os
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: os
           interfaces:
-          - bridge: {}
-            macAddress: 02:79:38:3e:18:4c
-            model: virtio
-            name: evpn
-            state: up
+            - bridge: {}
+              macAddress: 02:79:38:3e:18:4c
+              model: virtio
+              name: evpn
+              state: up
         machine:
           type: pc-q35-rhel9.8.0
         resources: {}
       networks:
-      - multus:
-          networkName: evpn-l2vni-110
-        name: evpn
+        - multus:
+            networkName: evpn-l2vni-110
+          name: evpn
       subdomain: headless
       volumes:
-      - containerDisk:
-          image: quay.io/kubevirt/fedora-with-test-tooling-container-disk:v1.7.0
-        name: os
-      - cloudInitNoCloud:
-          networkData: |
-            ethernets:
-              eth1:
-                addresses:
-                  - $VM1_IP
-                gateway4: $VMS_GW
-            version: 2
-        name: cloudinitdisk
+        - containerDisk:
+            image: quay.io/kubevirt/fedora-with-test-tooling-container-disk:v1.7.0
+          name: os
+        - cloudInitNoCloud:
+            networkData: |
+              ethernets:
+                eth1:
+                  addresses:
+                    - $VM1_IP
+                  gateway4: $VMS_GW
+              version: 2
+          name: cloudinitdisk
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
@@ -110,31 +110,31 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - evpn-workload
-            topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - evpn-workload
+              topologyKey: kubernetes.io/hostname
       architecture: amd64
       domain:
         devices:
           autoattachPodInterface: true
           disks:
-          - disk:
-              bus: virtio
-            name: cloudinitdisk
-          - bootOrder: 1
-            disk:
-              bus: virtio
-            name: os
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: os
           interfaces:
-          - bridge: {}
-            macAddress: 02:79:38:3e:18:4a
-            model: virtio
-            name: evpn
-            state: up
+            - bridge: {}
+              macAddress: 02:79:38:3e:18:4a
+              model: virtio
+              name: evpn
+              state: up
         firmware:
           serial: 1c1d43e2-d4b8-4600-ac73-9515d5850d5a
           uuid: fe61709a-ce45-4014-8fed-737ed68f33f7
@@ -142,20 +142,20 @@ spec:
           type: pc-q35-rhel9.8.0
         resources: {}
       networks:
-      - multus:
-          networkName: evpn-l2vni-110
-        name: evpn
+        - multus:
+            networkName: evpn-l2vni-110
+          name: evpn
       subdomain: headless
       volumes:
-      - containerDisk:
-          image: quay.io/kubevirt/fedora-with-test-tooling-container-disk:v1.7.0
-        name: os
-      - cloudInitNoCloud:
-          networkData: |
-            ethernets:
-              eth1:
-                addresses:
-                  - $VM2_IP
-                gateway4: $VMS_GW
-            version: 2
-        name: cloudinitdisk
+        - containerDisk:
+            image: quay.io/kubevirt/fedora-with-test-tooling-container-disk:v1.7.0
+          name: os
+        - cloudInitNoCloud:
+            networkData: |
+              ethernets:
+                eth1:
+                  addresses:
+                    - $VM2_IP
+                  gateway4: $VMS_GW
+              version: 2
+          name: cloudinitdisk
