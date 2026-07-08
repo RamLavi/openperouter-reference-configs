@@ -25,17 +25,17 @@ podman network create \
     $NET2_CRI_NET_NAME \
     ||:
 
-echo "INFO: Create external client network [$EXT_NET_CIDR] [$EXT_NET_CRI_NET_NAME]"
+echo "INFO: Create external client network [$EXT_NET_CRI_CIDR] [$EXT_NET_CRI_NET_NAME]"
 podman network create \
     --driver macvlan \
-    --subnet $EXT_NET_CIDR \
-    --ip-range $EXT_NET_CRI_RANGE \
+    --subnet $EXT_NET_CRI_CIDR \
     $EXT_NET_CRI_NET_NAME \
     ||:
 
 echo "INFO: Run external client container [$EXT_APP_NAME], connected to external network [$EXT_NET_CRI_NET_NAME]"
 podman run --name $EXT_APP_NAME \
   --rm -d \
+  --privileged\
   --network $EXT_NET_CRI_NET_NAME \
   $EXT_APP_IMG \
   netexec \

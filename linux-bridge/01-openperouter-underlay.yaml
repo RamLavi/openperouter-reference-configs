@@ -10,5 +10,5 @@ spec:
       - 100.65.0.0/24
   neighbors:
     - asn: 64512
-      address: 192.168.10.130
+      address: 192.169.1.3
   nics: [ "ens4" ]
