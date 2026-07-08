@@ -11,7 +11,7 @@ spec:
       type: mac-vlan
       state: up
       mac-vlan:
-        base-iface: ens4
+        base-iface: br-ex
         mode: bridge
       ipv4:
         enabled: false

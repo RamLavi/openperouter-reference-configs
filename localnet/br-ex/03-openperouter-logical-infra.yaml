@@ -34,6 +34,6 @@ spec:
       - 100.65.0.0/24
   neighbors:
     - asn: 64512
-      address: 10.100.11.4
+      address: 192.168.122.201
   nics:
     - macvlan0
