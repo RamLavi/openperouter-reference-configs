@@ -1,0 +1,18 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: $VNI_BR_NAD_NAME
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: bridge.network.kubevirt.io/$L2VNI_BRIDGE
+spec:
+  config: |
+    {
+        "cniVersion": "0.3.1",
+        "name": "$VNI_BR_NAD_NAME",
+        "type": "bridge",
+        "bridge": "$L2VNI_BRIDGE",
+        "ipam": {},
+        "macspoofchk": false,
+        "preserveDefaultVlan": false,
+        "disableContainerInterface": true
+    }

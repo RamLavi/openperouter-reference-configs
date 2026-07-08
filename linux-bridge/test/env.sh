@@ -36,6 +36,7 @@ EXT_NET_L2VNI_GW_CIDR="192.170.1.1/24"
 
 # bridge used for connecting VMs to EVPN
 VNI_BR_NNCP_NAME="linux-bridge-perouter-vni-110"
+VNI_BR_NAD_NAME="evpn-l2vni-110"
 L2VNI_BRIDGE="brvni110"
 
 # container runtime networks
@@ -74,14 +75,29 @@ FRR_CONF="${FRR_CONFIG}/frr.conf"
 NNCP_VNI_BR_TEMPLATE="${TMPL_DIR}/vni-linux-bridge-nncp.yaml"
 NNCP_VNI_BR_MANIFEST="${DIR}/00-vni-linux-bridge-nncp.yaml"
 
+NAD_VNI_BR_TEMPLATE="${TMPL_DIR}/vni-linux-bridge-nad.yaml"
+NAD_VNI_BR_MANIFEST="${DIR}/03-vni-linux-bridge-nad.yaml"
+
 UNDERLAY_TEMPLATE="${TMPL_DIR}/openperouter-underlay.yaml"
 UNDERLAY_MANIFEST="${DIR}/01-openperouter-underlay.yaml"
 
 VNIS_TEMPLATE="${TMPL_DIR}/openperouter-vnis.yaml"
 VNIS_MANIFEST="${DIR}/02-openperouter-vnis.yaml"
 
+WORKLOADS_TEMPLATE="${TMPL_DIR}/workloads.yaml"
+WORKLOADS_MANIFEST="${DIR}/04-workloads.yaml"
+
 # openperouter system namespace
 NAMESPACE="openshift-openperouter"
+
+# VMs
+VM1_NAME="vm1"
+VM1_IP="192.170.1.3/24"
+VM2_NAME="vm2"
+VM2_IP="192.170.1.5/24"
+VMS_GW="192.170.1.1"
+VMS_PUBLIC_KEY="$(realpath ~/.ssh/kcli.pub)"
+VMS_KEY="$(realpath ~/.ssh/kcli)"
 
 # aggregated entities for teardown
 NODE_VMS=($NODE0_HOSTNAME $NODE1_HOSTNAME)
