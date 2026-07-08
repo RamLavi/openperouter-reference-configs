@@ -31,7 +31,6 @@ EXT_NET_VTEP_CIDR="100.64.0.1/32"
 EXT_NET_VRF="red"
 EXT_NET_L3VNI=100
 EXT_NET_L2VNI=110
-EXT_NET_CIDR="192.170.1.0/24"
 EXT_NET_L2VNI_GW_CIDR="192.170.1.1/24"
 
 # bridge used for connecting VMs to EVPN
@@ -48,7 +47,7 @@ NET2_CRI_RANGE="192.168.20.128/25" # second half of the original CIDR
 
 # stretched network, on external container runtime end
 EXT_NET_CRI_NET_NAME="ext"
-EXT_NET_CRI_RANGE="192.170.1.128/25" # second half of the original CIDR
+EXT_NET_CRI_CIDR="192.169.1.0/24"
 
 # external client container
 EXT_APP_NAME="external-client"
