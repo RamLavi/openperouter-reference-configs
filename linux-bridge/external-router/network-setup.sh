@@ -2,11 +2,31 @@
 
 set -x
 
-# $NIC (external client network) is attached to VRF $VRF.
-# eth0 = underlay (192.168.10.0/24) stays in default VRF for BGP peering.
-# eth1 = isolated client network (192.169.1.x) goes in VRF $VRF for L3 routing.
+# The external router has two NICs:
+#   - UNDERLAY_NIC: connected to the cluster underlay network (192.168.10.0/24),
+#     stays in the default VRF for BGP peering with cluster nodes.
+#   - EXT_NIC: connected to the isolated external client network (192.169.1.x),
+#     goes into VRF $VRF for L3 routing via EVPN.
+#
+# IMPORTANT: podman multi-network NIC ordering is non-deterministic.
+# NICs are auto-detected by subnet, or can be overridden via env vars.
 
-NIC=${NIC:-eth1}
+# Auto-detect NICs by subnet if not explicitly provided.
+# Underlay = 192.168.10.0/24, External = 192.169.1.0/24
+if [ -z "$UNDERLAY_NIC" ] || [ -z "$EXT_NIC" ]; then
+  echo "INFO: Auto-detecting NIC assignment by subnet..."
+  UNDERLAY_NIC=$(ip -4 -o addr | grep '192\.168\.10\.' | awk '{print $2}' | head -1)
+  EXT_NIC=$(ip -4 -o addr | grep '192\.169\.1\.' | awk '{print $2}' | head -1)
+fi
+
+echo "INFO: UNDERLAY_NIC=$UNDERLAY_NIC, EXT_NIC=$EXT_NIC"
+
+if [ -z "$UNDERLAY_NIC" ] || [ -z "$EXT_NIC" ]; then
+  echo "FATAL: Could not determine NIC assignment. Set UNDERLAY_NIC and EXT_NIC explicitly."
+  exit 1
+fi
+
+NIC=$EXT_NIC
 
 VRF=${VRF:-red}
 VRF_TABLE=${VRF_TABLE:-1100}
