@@ -51,12 +51,16 @@ spec:
               bus: virtio
             name: cloudinitdisk
           interfaces:
+          - masquerade: {}
+            name: default
           - bridge: {}
             macAddress: 02:79:38:33:33:33
             model: virtio
             name: evpn
             state: up
       networks:
+      - pod: {}
+        name: default
       - multus:
           networkName: $VNI_BR_NAD_NAME
         name: evpn
@@ -120,12 +124,16 @@ spec:
               bus: virtio
             name: cloudinitdisk
           interfaces:
+          - masquerade: {}
+            name: default
           - bridge: {}
             macAddress: 02:79:38:55:55:55
             model: virtio
             name: evpn
             state: up
       networks:
+      - pod: {}
+        name: default
       - multus:
           networkName: $VNI_BR_NAD_NAME
         name: evpn

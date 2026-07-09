@@ -57,26 +57,29 @@ oc -n $TEST_NS wait vmi/$VM1_NAME --for condition=AgentConnected --timeout 10m
 oc -n $TEST_NS wait vmi/$VM2_NAME --for condition=AgentConnected --timeout 10m
 
 # its safe to expect for single IP address because VM is connected to single network
-VM1_IP=$(oc -n $TEST_NS get vmi $VM1_NAME -o jsonpath='{.status.interfaces[*].ipAddress}')
-VM2_IP=$(oc -n $TEST_NS get vmi $VM2_NAME -o jsonpath='{.status.interfaces[*].ipAddress}')
+VM1_IP=$(oc -n $TEST_NS get vmi $VM1_NAME -o jsonpath='{.status.interfaces[1].ipAddress}')
+VM2_IP=$(oc -n $TEST_NS get vmi $VM2_NAME -o jsonpath='{.status.interfaces[1].ipAddress}')
 EXT_CLIENT_IP=$(podman inspect -f '{{(index .NetworkSettings.Networks "'"$EXT_NET_CRI_NET_NAME"'").IPAddress}}' $EXT_APP_NAME)
 
-# TODO: fix ssh
+echo ""
+echo ""
+
+ssh_args="--identity-file=$VMS_KEY --local-ssh-opts='-o StrictHostKeyChecking=no' --local-ssh-opts='-o UserKnownHostsFile=/dev/null'"
 {
   echo "## Test: VM to VM connectivity"
   echo "### Test: connectivity from vm [$VM1_NAME] to vm [$VM2_NAME][$VM2_IP]"
-  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM1_NAME -c \"ping -I eth1 -c 3 -W 2 $VM2_IP\"" || \
+  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM1_NAME $ssh_args -c \"ping -I eth1 -c 3 -W 2 $VM2_IP\"" || \
     echo "  FAIL: no connectivity from [$VM1_NAME] to [$VM2_NAME][$VM2_IP]"
   echo ""
   echo ""
   echo "### Test: connectivity from vm [$VM2_NAME] to vm [$VM1_NAME][$VM1_IP]"
-  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM2_NAME -c \"ping -I eth1 -c 3 -W 2 $VM1_IP\"" || \
+  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM2_NAME $ssh_args -c \"ping -I eth1 -c 3 -W 2 $VM1_IP\"" || \
     echo "  FAIL: no connectivity from [$VM2_NAME] to [$VM1_NAME][$VM2_IP]"
   echo ""
   echo ""
   echo "## Test: VM to external-client connectivity"
   echo "### Test: connectivity from vm [$VM1_NAME] to external-client [$EXT_APP_NAME][$EXT_CLIENT_IP]"
-  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM1_NAME -c \"ping -I eth1 -c 3 -W 2 $EXT_CLIENT_IP\"" || \
+  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM1_NAME $ssh_args -c \"ping -I eth1 -c 3 -W 2 $EXT_CLIENT_IP\"" || \
     echo "  FAIL: no connectivity from [$VM1_NAME] to external-client [$EXT_APP_NAME][$EXT_CLIENT_IP]"
   echo ""
   echo ""
@@ -86,7 +89,7 @@ EXT_CLIENT_IP=$(podman inspect -f '{{(index .NetworkSettings.Networks "'"$EXT_NE
   echo ""
   echo ""
   echo "### Test: connectivity from vm [$VM2_NAME] to external-client [$EXT_APP_NAME][$EXT_CLIENT_IP]"
-  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM2_NAME -c \"ping -I eth1 -c 3 -W 2 $EXT_CLIENT_IP\"" || \
+  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM2_NAME $ssh_args -c \"ping -I eth1 -c 3 -W 2 $EXT_CLIENT_IP\"" || \
     echo "  FAIL: no connectivity from [$VM2_NAME] to external-client [$EXT_APP_NAME][$EXT_CLIENT_IP]"
   echo ""
   echo ""
