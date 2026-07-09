@@ -18,6 +18,14 @@ echo "INFO: rm openperrouter configs"
 oc -n $NAMESPACE delete -f $UNDERLAY_MANIFEST
 oc -n $NAMESPACE delete -f $VNIS_MANIFEST
 
+# cleanup test namespace
+oc delete ns $TEST_NS &
+while oc get ns $TEST_NS &> /dev/null; do
+  oc get ns test -o jsonpath='{.status}'
+  echo "waiting for ns $TEST_NS to dispose.."
+  sleep 3
+done
+
 # TODO: rm this workaround for NIC wont return to root netns bug
 for n in ${NODE_VMS[@]}; do
     kcli ssh -i /root/.ssh/kcli $n -- bash -x <<< '\

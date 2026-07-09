@@ -90,6 +90,9 @@ WORKLOADS_MANIFEST="${DIR}/04-workloads.yaml"
 # openperouter system namespace
 NAMESPACE="openshift-openperouter"
 
+# tests namespace
+TEST_NS="test-evpn-linux-bridge"
+
 # VMs
 VM1_NAME="vm1"
 VM1_IP="192.170.1.3/24"
