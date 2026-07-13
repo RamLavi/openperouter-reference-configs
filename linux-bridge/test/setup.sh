@@ -78,6 +78,8 @@ echo "INFO: Create external client network [$EXT_NET_CRI_CIDR] [$EXT_NET_CRI_NET
 podman network create \
     --driver macvlan \
     --subnet $EXT_NET_CRI_CIDR \
+    --ip-range $EXT_NET_CRI_RANGE \
+    --gateway $EXT_NET_GW_IP \
     $EXT_NET_CRI_NET_NAME \
     ||:
 
@@ -98,8 +100,8 @@ podman run --name $EXT_FRR_NAME \
   $EXT_FRR_IMG \
   ||:
 
-echo "INFO: Connect external router [$EXT_FRR_NAME] to external network [$EXT_NET_CRI_NET_NAME]"
-podman network connect $EXT_NET_CRI_NET_NAME $EXT_FRR_NAME \
+echo "INFO: Connect external router [$EXT_FRR_NAME] to external network [$EXT_NET_CRI_NET_NAME] with IP [$EXT_NET_GW_IP]"
+podman network connect --ip $EXT_NET_GW_IP $EXT_NET_CRI_NET_NAME $EXT_FRR_NAME \
   ||:
 
 # underlay manifest generation require the external router IP.

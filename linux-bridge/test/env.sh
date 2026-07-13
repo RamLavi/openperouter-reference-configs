@@ -56,6 +56,10 @@ NET2_CRI_RANGE="192.168.20.128/25" # second half of the original CIDR
 # stretched network, on external container runtime end
 EXT_NET_CRI_NET_NAME="ext"
 EXT_NET_CRI_CIDR="192.169.1.0/24"
+EXT_NET_CRI_RANGE="192.169.1.128/25"
+# gateway for the external client network, pinned to the external-router's
+# address on this network so podman doesn't auto-guess an unreachable gateway
+EXT_NET_GW_IP="192.169.1.1"
 
 # external client container
 EXT_APP_NAME="external-client"
