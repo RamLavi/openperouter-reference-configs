@@ -95,15 +95,28 @@ podman run --name $EXT_FRR_NAME \
   --rm -d --privileged --ulimit core=-1 \
   --volume $FRR_CONFIG:/etc/frr \
   --network $NET1_CRI_NET_NAME \
-  --network $EXT_NET_CRI_NET_NAME \
   $EXT_FRR_IMG \
+  ||:
+
+echo "INFO: Connect external router [$EXT_FRR_NAME] to external network [$EXT_NET_CRI_NET_NAME]"
+podman network connect $EXT_NET_CRI_NET_NAME $EXT_FRR_NAME \
   ||:
 
 # underlay manifest generation require the external router IP.
 if $(podman ps $EXT_FRR_NAME 2>&1 | grep -q Up); then
   echo "FATAL: cannot generate underlay manifest, external router is not running" && exist 1
 fi
+
+echo "INFO: Waiting for external-router network attachment.."
+timeout 30s bash -c "until [ -n \"$(podman exec $EXT_FRR_NAME ip -4 -o addr show dev $EXT_FRR_NET1_NIC | awk '{print $4}' | cut -d/ -f1)\" ]; do \
+echo 'waiting..'; sleep 1; done"
+
 EXT_FRR_IP=$(podman exec $EXT_FRR_NAME ip -4 -o addr show dev $EXT_FRR_NET1_NIC scope global | awk '{print $4}' | cut -d/ -f1)
+if ! [[ $EXT_FRR_IP =~ $NET1_EXPECTED_IP_MATCH ]]; then
+  echo "FATAL: external router container network mapping is wrong. \
+  Expected [$EXT_FRR_NET1_NIC] to match [$NET1_EXPECTED_IP_MATCH], \
+  got IP [$EXT_FRR_IP]" && exit 1
+fi
 echo "INFO: Generate OpenPERouter Underlay manifest:"
 (
   export \

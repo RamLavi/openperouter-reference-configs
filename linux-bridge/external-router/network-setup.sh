@@ -11,20 +11,23 @@ set -x
 # IMPORTANT: podman multi-network NIC ordering is non-deterministic.
 # NICs are auto-detected by subnet, or can be overridden via env vars.
 
-# Auto-detect NICs by subnet if not explicitly provided.
-# Underlay = 192.168.10.0/24, External = 192.169.1.0/24
-if [ -z "$UNDERLAY_NIC" ] || [ -z "$EXT_NIC" ]; then
-  echo "INFO: Auto-detecting NIC assignment by subnet..."
+handle_intr() {
+  echo "interrupted, existing.." && exit 1
+}
+
+trap handle_intr SIGTERM SIGKILL
+
+echo "INFO: Waiting for network attachments: Underlay=192.168.10.0/24, External=192.169.1.0/24"
+UNDERLAY_NIC=""
+EXT_NIC=""
+wait_duration="3s"
+until [[ -n $UNDERLAY_NIC ]] && [[ -n $EXT_NIC ]]; do
+  echo "INFO: Not all networks attachment, waiting... (sleep $wait_duration)"
+  sleep $wait_duration
   UNDERLAY_NIC=$(ip -4 -o addr | grep '192\.168\.10\.' | awk '{print $2}' | head -1)
   EXT_NIC=$(ip -4 -o addr | grep '192\.169\.1\.' | awk '{print $2}' | head -1)
-fi
-
-echo "INFO: UNDERLAY_NIC=$UNDERLAY_NIC, EXT_NIC=$EXT_NIC"
-
-if [ -z "$UNDERLAY_NIC" ] || [ -z "$EXT_NIC" ]; then
-  echo "FATAL: Could not determine NIC assignment. Set UNDERLAY_NIC and EXT_NIC explicitly."
-  exit 1
-fi
+  echo "INFO: UNDERLAY_NIC=$UNDERLAY_NIC, EXT_NIC=$EXT_NIC"
+done
 
 NIC=$EXT_NIC
 
