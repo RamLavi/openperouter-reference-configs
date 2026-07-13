@@ -72,4 +72,6 @@ ip link set $L2VNI_TUN type bridge_slave neigh_suppress on learning off
 ip link set $L2VNI_TUN up
 ip link set $L2VNI_BR up
 
+ip addr add 192.170.1.100/24 dev br110
+
 /sbin/tini -s -- /usr/lib/frr/docker-start

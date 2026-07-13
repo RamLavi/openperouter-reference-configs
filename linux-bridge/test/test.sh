@@ -77,6 +77,29 @@ ssh_args="--identity-file=$VMS_KEY --local-ssh-opts='-o StrictHostKeyChecking=no
     echo "  FAIL: no connectivity from [$VM2_NAME] to [$VM1_NAME][$VM2_IP]"
   echo ""
   echo ""
+  echo "## Test: VM to external-router connectivity"
+  ext_br="192.170.1.100"
+  ext_br_dev="br110"
+  echo "### Test: connectivity from VM [$VM1_NAME] to external-router [$EXT_FRR_NAME][$ext_br_dev][$ext_br]"
+  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM1_NAME $ssh_args -c \"ping -I eth1 -c 3 -W 2 $ext_br\"" || \
+    echo "  FAIL: no connectivity from VM [$VM1_NAME][$VM1_IP] to external-router [$EXT_FRR_NAME][$ext_br_dev][$ext_br]"
+  echo ""
+  echo ""
+  echo "### Test: connectivity from external-router [$EXT_FRR_NAME][$ext_br_dev][$ext_br] to VM [$VM1_NAME][$VM1_IP]"
+  podman exec $EXT_FRR_NAME bash -c "ping -I $ext_br_dev -c 3 -W 2 $VM1_IP" || \
+    echo "  FAIL: no connectivity from external-router [$EXT_FRR_NAME][$ext_br_dev] to [$VM1_NAME][$VM1_IP]"
+  echo ""
+  echo ""
+  echo "### Test: connectivity from VM [$VM2_NAME] to external-router [$EXT_FRR_NAME][$ext_br_dev][$ext_br]"
+  eval "virtctl -n $TEST_NS ssh fedora@vm/$VM2_NAME $ssh_args -c \"ping -I eth1 -c 3 -W 2 $ext_br\"" || \
+    echo "  FAIL: no connectivity from VM [$VM2_NAME][$VM2_IP] to external-router [$EXT_FRR_NAME][$ext_br_dev][$ext_br]"
+  echo ""
+  echo ""
+  echo "### Test: connectivity from external-router [$EXT_FRR_NAME][$ext_br_dev][$ext_br] to VM [$VM2_NAME][$VM2_IP]"
+  podman exec $EXT_FRR_NAME bash -c "ping -I $ext_br_dev -c 3 -W 2 $VM2_IP" || \
+    echo "  FAIL: no connectivity from external-router [$EXT_FRR_NAME][$ext_br_dev][$ext_br] to [$VM2_NAME][$VM2_IP]"
+  echo ""
+  echo ""
   echo "## Test: VM to external-client connectivity"
   echo "### Test: connectivity from vm [$VM1_NAME] to external-client [$EXT_APP_NAME][$EXT_CLIENT_IP]"
   eval "virtctl -n $TEST_NS ssh fedora@vm/$VM1_NAME $ssh_args -c \"ping -I eth1 -c 3 -W 2 $EXT_CLIENT_IP\"" || \
