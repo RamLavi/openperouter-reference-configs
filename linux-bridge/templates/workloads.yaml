@@ -77,6 +77,9 @@ spec:
                 addresses:
                   - $VM1_IP
                 gateway4: $VMS_GW
+                routes:
+                  - to: $EXT_NET_CRI_CIDR
+                    via: $VMS_GW
             version: 2
         name: cloudinitdisk
 ---
@@ -150,5 +153,8 @@ spec:
                 addresses:
                   - $VM2_IP
                 gateway4: $VMS_GW
+                routes:
+                  - to: $EXT_NET_CRI_CIDR
+                    via: $VMS_GW
             version: 2
         name: cloudinitdisk

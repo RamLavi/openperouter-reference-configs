@@ -23,6 +23,7 @@ echo "INFO: Generate VM manifests:"
     VM2_IP=$VM2_IP \
     VMS_GW=$VMS_GW \
     SSH_PUBLIC_KEY="$(base64 $VMS_PUBLIC_KEY -w 500)" \
+    EXT_NET_CRI_CIDR=$EXT_NET_CRI_CIDR \
     VNI_BR_NAD_NAME=$VNI_BR_NAD_NAME
   echo "\
     VM1_NAME=$VM1_NAME
