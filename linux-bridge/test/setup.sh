@@ -26,17 +26,15 @@ echo "INFO: Generate external-router frr.conf:"
   export ASN=$EXT_NET_ASN \
     VRF=$EXT_NET_VRF \
     L3VNI=$EXT_NET_L3VNI \
+    NEI_ASN=$CLUSTER_NET_ASN \
     NEI_CIDR=$NET1_CIDR \
-    NEI_IP=$NET1_NODE0_IP \
-    NEI2_IP=$NET1_NODE1_IP \
     VTEP_CIDR=$EXT_NET_VTEP_CIDR
   echo "\
     ASN=$ASN
     VRF=$VRF
     L3VNI=$L3VNI
+    NEI_ASN=$NEI_ASN
     NEI_CIDR=$NEI_CIDR
-    NEI_IP=$NEI_IP
-    NEI2_IP=$NEI2_IP
     VTEP_CIDR=$VTEP_CIDR"
   envsubst <<< $(cat $FRR_CONF_TEMPLATE) > $FRR_CONF
 )
