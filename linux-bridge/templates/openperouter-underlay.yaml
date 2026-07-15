@@ -1,0 +1,17 @@
+---
+apiVersion: openpe.openperouter.github.io/v1alpha1
+kind: Underlay
+metadata:
+  name: underlay
+spec:
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/worker: ''
+  asn: $CLUSTER_ASN
+  tunnelEndpoint:
+    cidrs:
+      - 100.65.0.0/24
+  neighbors:
+    - asn: $NEI_ASN
+      address: $NEI_IP
+  nics: [ $NICS ]
