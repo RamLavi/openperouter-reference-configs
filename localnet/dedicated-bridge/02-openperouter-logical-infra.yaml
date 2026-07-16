@@ -26,15 +26,66 @@ spec:
 apiVersion: openpe.openperouter.github.io/v1alpha1
 kind: Underlay
 metadata:
-  name: underlay
+  name: underlay-multi-homing-worker-0
   namespace: openperouter-system
 spec:
   asn: 64514
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: multi-homing-worker-0
   tunnelEndpoint:
     cidrs:
-      - 100.65.0.0/24
+    - 100.65.0.0/24
+  interfaces:
+    - type: CNIDevice
+      cniDevice:
+        type: RawConfig
+        interfaceName: net1
+        rawConfig:
+          cniVersion: "1.0.0"
+          name: macvlan-underlay
+          plugins:
+            - type: macvlan
+              master: bond1
+              mode: bridge
+              ipam:
+                type: static
+                addresses:
+                  - address: 10.200.11.50/16
   neighbors:
     - asn: 64512
-      address: 10.200.11.4
-  nics:
-    - macvlan0 
+      address: 10.200.11.8
+---
+apiVersion: openpe.openperouter.github.io/v1alpha1
+kind: Underlay
+metadata:
+  name: underlay-multi-homing-worker-1
+  namespace: openperouter-system
+spec:
+  asn: 64514
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: multi-homing-worker-1
+  tunnelEndpoint:
+    cidrs:
+    - 100.65.0.0/24
+  interfaces:
+    - type: CNIDevice
+      cniDevice:
+        type: RawConfig
+        interfaceName: net1
+        rawConfig:
+          cniVersion: "1.0.0"
+          name: macvlan-underlay
+          plugins:
+            - type: macvlan
+              master: bond1
+              mode: bridge
+              ipam:
+                type: static
+                addresses:
+                  - address: 10.200.11.51/16
+  neighbors:
+    - asn: 64512
+      address: 10.200.11.8
+

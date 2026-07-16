@@ -12,7 +12,7 @@ spec:
       state: up
       ipv4:
          enabled: false
-       ipv6:
+      ipv6:
          enabled: false
       link-aggregation:
         mode: active-backup
