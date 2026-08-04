@@ -21,5 +21,6 @@ ip link set vni100 type bridge_slave neigh_suppress on learning off
 ip link set vni100 up
 ip link set br100 up
 
+/usr/lib/frr/frrinit.sh start
 sleep infinity
 
