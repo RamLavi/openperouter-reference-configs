@@ -1,4 +1,4 @@
-apiVersion: openpe.openperouter.github.io/v1alpha1
+apiVersion: network.openperouter.io/v1alpha1
 kind: L3VNI
 metadata:
   name: red
@@ -7,33 +7,90 @@ spec:
   vni: 100
   vrf: red
 ---
-apiVersion: openpe.openperouter.github.io/v1alpha1
+apiVersion: network.openperouter.io/v1alpha1
 kind: L2VNI
 metadata:
   name: layer2
   namespace: openshift-openperouter
 spec:
-  hostmaster:
+  hostMaster:
+    type: OVSBridge
     ovsBridge:
+      lifecycle: External
       name: ovsbr1
-    type: ovs-bridge
-  l2gatewayips:
-    - 192.170.1.1/24
+  gatewayIPs: ["192.170.1.1/24"]
   vni: 110
-  vrf: red
+  routingDomain:
+    type: L3VNI
+    l3vni:
+      name: red
 ---
-apiVersion: openpe.openperouter.github.io/v1alpha1
+apiVersion: network.openperouter.io/v1alpha1
 kind: Underlay
 metadata:
-  name: underlay
+  name: underlay-worker0
   namespace: openshift-openperouter
 spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: multi-homing-worker-0.maiqueb.org
   asn: 64514
   tunnelEndpoint:
     cidrs:
       - 100.65.0.0/24
   neighbors:
     - asn: 64512
-      address: 192.168.122.201
-  nics:
-    - macvlan0
+      address: 192.168.122.15
+  interfaces:
+    - type: CNIDevice
+      cniDevice:
+        type: RawConfig
+        interfaceName: net1
+        rawConfig:
+          cniVersion: "1.0.0"
+          name: macvlan-underlay
+          plugins:
+            - type: macvlan
+              master: br-ex
+              mode: bridge
+              capabilities:
+                mac: true
+              ipam:
+                type: dhcp
+        runtimeConfig:
+          mac: "aa:bb:cc:00:00:01"
+---
+apiVersion: network.openperouter.io/v1alpha1
+kind: Underlay
+metadata:
+  name: underlay-worker1
+  namespace: openshift-openperouter
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: multi-homing-worker-1.maiqueb.org
+  asn: 64514
+  tunnelEndpoint:
+    cidrs:
+      - 100.65.0.0/24
+  neighbors:
+    - asn: 64512
+      address: 192.168.122.15
+  interfaces:
+    - type: CNIDevice
+      cniDevice:
+        type: RawConfig
+        interfaceName: net1
+        rawConfig:
+          cniVersion: "1.0.0"
+          name: macvlan-underlay
+          plugins:
+            - type: macvlan
+              master: br-ex
+              mode: bridge
+              capabilities:
+                mac: true
+              ipam:
+                type: dhcp
+        runtimeConfig:
+          mac: "aa:bb:cc:00:00:aa"
