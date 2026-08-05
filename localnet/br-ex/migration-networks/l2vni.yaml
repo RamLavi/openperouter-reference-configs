@@ -1,0 +1,27 @@
+---
+apiVersion: network.openperouter.io/v1alpha1
+kind: L2VNI
+metadata:
+  name: migration-net
+  namespace: openperouter-system
+spec:
+  hostMaster:
+    type: LinuxBridge
+    linuxBridge:
+      lifecycle: Managed
+  gatewayIPs: ["192.170.10.1/24"]
+  vni: 666
+  routingDomain:
+    type: L3VNI
+    l3vni:
+      name: rouge
+---
+apiVersion: network.openperouter.io/v1alpha1
+kind: L3VNI
+metadata:
+  name: rouge
+  namespace: openperouter-system
+spec:
+  vni: 777
+  vrf: rouge
+
